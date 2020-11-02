@@ -223,9 +223,6 @@ class NissanConnect {
             } else {
                 $this->debug("  Reached time limit of " . static::SECONDS_LIMIT_FOR_RETRYING_REQUESTS . " seconds, giving up waiting for updated data from API");
             }
-            else{
-                $this->debug("  Reached time limit of " . NissanConnect::SECONDS_LIMIT_FOR_RETRYING_REQUESTS . " seconds, giving up waiting for updated data from API");
-            }
             break;
         }
 
