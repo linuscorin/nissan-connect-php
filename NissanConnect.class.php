@@ -214,13 +214,14 @@ class NissanConnect {
             $this->debug("Last Updated date received: " . date("Y-m-d H:i:s", strtotime($response->BatteryStatusRecords->OperationDateAndTime)));
             $time_diff = abs($expected_last_updated_date - strtotime($response->BatteryStatusRecords->OperationDateAndTime));
             $this->debug("  Last Updated Date: Received minus Expected = $time_diff seconds");
-            if ($time_diff < NissanConnect::SECONDS_LIMIT_TO_CONSIDER_DATA_AS_FRESH){
+            if ($time_diff < static::SECONDS_LIMIT_TO_CONSIDER_DATA_AS_FRESH) {
               $this->debug("  Got freshly updated data in API response");
-            }
-            elseif (time() - $start < NissanConnect::SECONDS_LIMIT_FOR_RETRYING_REQUESTS){
-                $this->debug("  Haven't yet got fresh data from the API, trying again in " . NissanConnect::SECONDS_BETWEEN_RETRIES . " seconds");
-                sleep(NissanConnect::SECONDS_BETWEEN_RETRIES);
+            } elseif (time() - $start < static::SECONDS_LIMIT_FOR_RETRYING_REQUESTS) {
+                $this->debug("  Haven't yet got fresh data from the API, trying again in " . static::SECONDS_BETWEEN_RETRIES . " seconds...");
+                sleep(static::SECONDS_BETWEEN_RETRIES);
                 continue;
+            } else {
+                $this->debug("  Reached time limit of " . static::SECONDS_LIMIT_FOR_RETRYING_REQUESTS . " seconds, giving up waiting for updated data from API");
             }
             else{
                 $this->debug("  Reached time limit of " . NissanConnect::SECONDS_LIMIT_FOR_RETRYING_REQUESTS . " seconds, giving up waiting for updated data from API");
@@ -348,6 +349,12 @@ class NissanConnect {
             # Use the posix function if available. This requires php-posix or php-process package
             $unixuser = function_exists('posix_geteuid') ? posix_getpwuid(posix_geteuid())['name'] : get_current_user();
             $local_storage_file = sys_get_temp_dir() . "/.nissan-connect-storage-$uid-$unixuser.json";
+
+            $local_storage_file_old = sys_get_temp_dir() . "/.nissan-connect-storage-$uid.json";
+            if (!file_exists($local_storage_file) && file_exists($local_storage_file_old)) {
+                rename($local_storage_file_old, $local_storage_file);
+            }
+
             if (file_exists($local_storage_file) && !$skip_local_file) {
                 $json = @json_decode(file_get_contents($local_storage_file));
                 $this->config->vin = @$json->vin;
